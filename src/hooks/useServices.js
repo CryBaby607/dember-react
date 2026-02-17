@@ -11,16 +11,14 @@ export function useServices() {
         try {
             setLoading(true);
 
-            // Debug: Check session
-            const { data: { session } } = await supabase.auth.getSession();
-            console.log('useServices - Session:', session);
+
 
             const { data, error } = await supabase
                 .from('services')
                 .select('*')
                 .order('name', { ascending: true });
 
-            console.log('useServices - Fetch Result:', { data, error });
+
 
             if (error) throw error;
             setServices(data || []);

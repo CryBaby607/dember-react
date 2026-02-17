@@ -65,7 +65,6 @@ export function Agenda() {
             e.target.showPicker();
         } catch (error) {
             // Fallback: the input remains focused (standard behavior)
-            console.log("Browser doesn't support showPicker or blocked it", error);
         }
     };
 
