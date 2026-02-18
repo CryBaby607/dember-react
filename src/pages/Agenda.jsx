@@ -18,11 +18,7 @@ export function Agenda() {
     const [currentDate, setCurrentDate] = useState(now());
 
     // State for Data Fetching (Hoisted from Grid)
-    const [refreshKey, setRefreshKey] = useState(0);
-    // Note: useAgenda currently might not accept refreshKey, but we will pass data down anyway.
-    // If useAgenda only reacts to date, we might need to toggle date or update hook.
-    // For now, we rely on standard fetching.
-    const { barbers, bookings, unavailability, loading, error } = useAgenda(currentDate, refreshKey);
+    const { barbers, bookings, unavailability, loading, error, refresh } = useAgenda(currentDate);
 
     // State for Modal
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -142,8 +138,10 @@ export function Agenda() {
         }
     };
 
-    const handleRefresh = () => {
-        setRefreshKey(prev => prev + 1);
+    const handleRefresh = async () => {
+        // Small delay to ensure DB write propagation before re-fetching
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await refresh();
     };
 
     return (

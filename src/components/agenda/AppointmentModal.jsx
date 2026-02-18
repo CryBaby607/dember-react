@@ -115,7 +115,9 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
                 p_booking_id: booking.id,
                 p_barber_id: selectedBarberId,
                 p_start_time: utcStart.toISOString(),
-                p_end_time: utcEnd.toISOString()
+                p_end_time: utcEnd.toISOString(),
+                p_client_name: clientName.trim() || null,
+                p_service_id: selectedServiceId || null
             });
 
             if (rpcError) {
@@ -136,7 +138,7 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
             setIsSaving(false);
             actionLock.current = false;
         }
-    }, [booking, selectedBarberId, selectedDate, selectedTime, startTime, endTime, onStatusChange, onClose]);
+    }, [booking, selectedBarberId, selectedDate, selectedTime, startTime, endTime, clientName, selectedServiceId, onStatusChange, onClose]);
 
 
     const handleSubmit = useCallback(async (e) => {
