@@ -151,24 +151,24 @@ export function Agenda() {
             <Toaster position="top-right" richColors />
 
             {/* Header with Date Picker */}
-            <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
-                <div className="flex items-center gap-6">
+            <header className="bg-white border-b border-gray-200 px-4 lg:px-6 py-3 lg:py-4 flex flex-wrap items-center justify-between gap-2 shadow-sm z-10">
+                <div className="flex items-center gap-3 lg:gap-6">
                     <div className="flex items-center gap-2">
                         <div>
-                            <h2 className="text-xl font-bold text-slate-800 leading-tight">Agenda Diaria</h2>
-                            <p className="text-xs text-slate-500 font-medium">Gestión Operativa</p>
+                            <h2 className="text-lg lg:text-xl font-bold text-slate-800 leading-tight">Agenda Diaria</h2>
+                            <p className="text-xs text-slate-500 font-medium hidden lg:block">Gestión Operativa</p>
                         </div>
                     </div>
 
-                    <div className="h-8 w-px bg-gray-200 mx-2"></div>
+                    <div className="h-8 w-px bg-gray-200 mx-1 lg:mx-2 hidden lg:block"></div>
 
                     {/* Date Navigation */}
                     <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-1 shadow-sm">
-                        <button onClick={handlePrevDay} className="p-1.5 hover:bg-white hover:text-indigo-600 rounded-md shadow-sm transition-colors text-slate-500" aria-label="Día anterior">
+                        <button onClick={handlePrevDay} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white hover:text-indigo-600 rounded-md shadow-sm transition-colors text-slate-500" aria-label="Día anterior">
                             <ChevronLeft size={18} aria-hidden="true" />
                         </button>
                         <div className="relative group">
-                            <div className="px-4 py-1 font-semibold text-slate-700 min-w-[180px] text-center capitalize text-sm cursor-pointer hover:bg-gray-100 rounded transition-colors">
+                            <div className="px-3 lg:px-4 py-1 font-semibold text-slate-700 min-w-[150px] lg:min-w-[180px] text-center capitalize text-sm cursor-pointer hover:bg-gray-100 rounded transition-colors">
                                 {format(currentDate, "EEEE d 'de' MMMM", { locale: es })}
                             </div>
                             <input
@@ -182,7 +182,7 @@ export function Agenda() {
                                 title="Cambiar fecha"
                             />
                         </div>
-                        <button onClick={handleNextDay} className="p-1.5 hover:bg-white hover:text-indigo-600 rounded-md shadow-sm transition-colors text-slate-500" aria-label="Día siguiente">
+                        <button onClick={handleNextDay} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white hover:text-indigo-600 rounded-md shadow-sm transition-colors text-slate-500" aria-label="Día siguiente">
                             <ChevronRight size={18} aria-hidden="true" />
                         </button>
                     </div>
@@ -192,10 +192,11 @@ export function Agenda() {
                 <div>
                     <button
                         onClick={() => setIsUnavailabilityModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 shadow-sm text-slate-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:text-red-600 transition-colors"
+                        className="flex items-center gap-2 px-3 lg:px-4 py-2 min-h-[44px] bg-white border border-gray-300 shadow-sm text-slate-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:text-red-600 transition-colors"
                     >
                         <Ban size={16} aria-hidden="true" />
-                        Bloquear Horario
+                        <span className="hidden lg:inline">Bloquear Horario</span>
+                        <span className="lg:hidden">Bloquear</span>
                     </button>
                 </div>
 

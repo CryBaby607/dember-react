@@ -483,13 +483,13 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                 isSaving && "opacity-90 cursor-wait pointer-events-none"
             )}>
                 <div className="flex-1 overflow-auto relative scrollbar-thin">
-                    <div className="inline-block min-w-full">
+                    <div className="w-full min-w-max">
 
                         {/* Header Row */}
                         <div className="flex border-b border-slate-200 bg-slate-50 sticky top-0 z-30 shadow-sm">
                             <div className="w-16 shrink-0 border-r border-slate-200 bg-slate-50 sticky left-0 z-40"></div>
                             {barbers.map(barber => (
-                                <div key={barber.id} className="flex-1 min-w-[200px] text-center py-3 font-semibold text-slate-700 uppercase tracking-wide text-xs border-r border-slate-200 last:border-r-0">
+                                <div key={barber.id} className="flex-1 min-w-[140px] text-center py-3 font-semibold text-slate-700 uppercase tracking-wide text-xs border-r border-slate-200 last:border-r-0">
                                     {barber.full_name}
                                 </div>
                             ))}
@@ -520,7 +520,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                                 <DroppableBarberColumn
                                     key={barber.id}
                                     barberId={barber.id}
-                                    className="flex-1 min-w-[200px] border-r border-slate-100 relative last:border-r-0"
+                                    className="flex-1 min-w-[140px] border-r border-slate-100 relative last:border-r-0"
                                 >
                                     {/* Background Slots */}
                                     {timeSlots.map((slot, i) => {

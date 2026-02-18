@@ -1,17 +1,26 @@
 import React from 'react';
-import { Calendar, Scissors, Settings, ChevronLeft, LogOut, ChevronRight, Menu } from 'lucide-react';
+import { Calendar, Scissors, Settings, ChevronLeft, LogOut, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { NavLink } from 'react-router-dom';
 
-export function Sidebar({ isCollapsed, toggleSidebar }) {
+export function Sidebar({ isCollapsed, toggleSidebar, isPortrait = false }) {
     const { user, signOut } = useAuth();
 
     return (
         <aside
             className={cn(
-                "relative flex flex-col h-full bg-[#0F0F13] text-zinc-300 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] border-r border-zinc-800/50 shadow-2xl z-50",
-                isCollapsed ? "w-[88px]" : "w-[280px]"
+                "relative flex flex-col h-full bg-[#0F0F13] text-zinc-300 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] border-r border-zinc-800/50 shadow-2xl",
+                // Portrait: overlay mode — fixed position, slides in/out
+                isPortrait
+                    ? cn(
+                        "fixed top-0 left-0 z-50",
+                        isCollapsed ? "w-[88px]" : "w-[280px]"
+                    )
+                    : cn(
+                        "z-50",
+                        isCollapsed ? "w-[88px]" : "w-[280px]"
+                    )
             )}
             style={{
                 backgroundImage: 'radial-gradient(circle at 0% 0%, rgba(30,30,35,0.4) 0%, transparent 50%)'
@@ -62,6 +71,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }) {
                     label="Agenda"
                     isCollapsed={isCollapsed}
                     description="Gestión diaria"
+                    isPortrait={isPortrait}
+                    onNavigate={isPortrait && !isCollapsed ? toggleSidebar : undefined}
                 />
 
                 <NavItem
@@ -70,6 +81,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }) {
                     label="Servicios"
                     isCollapsed={isCollapsed}
                     description="Catálogo"
+                    isPortrait={isPortrait}
+                    onNavigate={isPortrait && !isCollapsed ? toggleSidebar : undefined}
                 />
 
                 <NavItem
@@ -78,6 +91,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }) {
                     label="Admin"
                     isCollapsed={isCollapsed}
                     description="Configuración"
+                    isPortrait={isPortrait}
+                    onNavigate={isPortrait && !isCollapsed ? toggleSidebar : undefined}
                 />
             </nav>
 
@@ -116,10 +131,11 @@ export function Sidebar({ isCollapsed, toggleSidebar }) {
     );
 }
 
-function NavItem({ icon: Icon, label, to, isCollapsed, description }) {
+function NavItem({ icon: Icon, label, to, isCollapsed, description, isPortrait, onNavigate }) {
     return (
         <NavLink
             to={to}
+            onClick={onNavigate}
             className={({ isActive }) => cn(
                 "group relative flex items-center transition-all duration-300 ease-out overflow-hidden",
                 isCollapsed ? "justify-center p-0 w-12 h-12 mx-auto rounded-2xl" : "px-4 py-3.5 rounded-xl w-full",

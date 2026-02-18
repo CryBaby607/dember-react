@@ -166,7 +166,7 @@ export function QuickCreatePanel({ isOpen, onClose, barber, time, anchorRect, on
             <div
                 ref={panelRef}
                 className={cn(
-                    "fixed w-[340px] max-h-[480px] overflow-y-auto",
+                    "fixed w-[min(340px,calc(100vw-120px))] max-h-[min(480px,calc(100vh-32px))] overflow-y-auto",
                     "bg-white rounded-xl shadow-2xl ring-1 ring-slate-900/10",
                     "flex flex-col",
                     "animate-in fade-in slide-in-from-bottom-2 duration-200"
@@ -190,7 +190,7 @@ export function QuickCreatePanel({ isOpen, onClose, barber, time, anchorRect, on
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                         aria-label="Cerrar"
                     >
                         <X size={16} />

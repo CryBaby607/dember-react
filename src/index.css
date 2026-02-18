@@ -4,6 +4,12 @@
 
 /* === PWA Tablet UX === */
 
+/* Viewport height fallback: dvh for modern, vh for old Android WebViews */
+:root {
+  --app-height: 100vh;
+  --app-height: 100dvh; /* Progressive enhancement — second declaration wins if supported */
+}
+
 /* Prevent accidental zoom on double-tap (safe for dnd-kit) */
 html {
   touch-action: manipulation;
@@ -14,4 +20,34 @@ html {
 /* Prevent pull-to-refresh and overscroll bouncing */
 body {
   overscroll-behavior: none;
+}
+
+/* Safe area insets for standalone PWA mode (notch, rounded corners) */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+}
+
+/* === Sidebar Portrait Overlay === */
+
+/* Backdrop for sidebar overlay in portrait mode */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.sidebar-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
 }
