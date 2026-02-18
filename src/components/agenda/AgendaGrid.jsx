@@ -497,7 +497,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                             <div className="h-[44px] sticky top-0 z-40 bg-slate-50 border-b border-slate-200 border-r border-r-slate-200 shadow-sm" />
 
                             {/* Time slots */}
-                            <div className="relative border-r border-slate-100 text-xs text-slate-400 font-medium text-right pr-2">
+                            <div className="relative border-r border-slate-100 text-sm text-slate-600 font-medium text-right pr-2">
                                 {timeSlots.map((slot, i) => (
                                     <div key={i} className="flex items-start justify-end pr-2 pt-1 border-b border-transparent" style={{ height: VISUAL_SLOT_HEIGHT }}>
                                         <span className="-mt-2 bg-white relative z-10 px-1">{format(slot, 'HH:mm')}</span>

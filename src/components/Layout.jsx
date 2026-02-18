@@ -41,30 +41,24 @@ export function Layout({ children }) {
 
     return (
         <div className="flex h-[100dvh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 overflow-hidden">
-            {/* Backdrop overlay for portrait sidebar */}
-            {isPortrait && (
+            {/* Backdrop overlay for portrait expanded sidebar */}
+            {isPortrait && !isCollapsed && (
                 <div
-                    className={`sidebar-backdrop ${!isCollapsed ? 'active' : ''}`}
+                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
                     onClick={handleBackdropClick}
                     aria-hidden="true"
                 />
             )}
 
-            {/* Sidebar Component */}
+            {/* Sidebar — always in flex flow */}
             <Sidebar
                 isCollapsed={isCollapsed}
                 toggleSidebar={toggleSidebar}
                 isPortrait={isPortrait}
             />
 
-            {/* Main Content */}
-            <main
-                className={cn(
-                    "flex-1 min-w-0 overflow-hidden flex flex-col relative transition-all duration-300 ease-in-out bg-slate-50 m-2 rounded-2xl shadow-2xl border border-white/10",
-                    // In portrait, offset for the fixed sidebar (w-[88px] collapsed)
-                    isPortrait && "ml-[88px]"
-                )}
-            >
+            {/* Main Content — pure flex-1, no ml compensation */}
+            <main className="flex-1 min-w-0 overflow-hidden flex flex-col relative transition-all duration-300 ease-in-out bg-white m-2 rounded-2xl shadow-sm border border-slate-200">
                 {children}
             </main>
         </div>

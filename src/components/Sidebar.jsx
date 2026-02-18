@@ -10,15 +10,16 @@ export function Sidebar({ isCollapsed, toggleSidebar, isPortrait = false }) {
     return (
         <aside
             className={cn(
-                "relative flex flex-col h-full bg-[#0F0F13] text-zinc-300 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] border-r border-zinc-800/50 shadow-2xl",
-                // Portrait: overlay mode — fixed position, slides in/out
+                "flex flex-col h-full bg-[#0F0F13] text-zinc-300 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] border-r border-zinc-800/50 shadow-2xl flex-shrink-0",
+                // Portrait: always w-16 in flow; when expanded, overlay via absolute
                 isPortrait
                     ? cn(
-                        "fixed top-0 left-0 z-50",
-                        isCollapsed ? "w-[88px]" : "w-[280px]"
+                        isCollapsed
+                            ? "relative w-16 z-30"
+                            : "absolute top-0 left-0 z-50 w-[280px] h-full"
                     )
                     : cn(
-                        "z-50",
+                        "relative z-50",
                         isCollapsed ? "w-[88px]" : "w-[280px]"
                     )
             )}
