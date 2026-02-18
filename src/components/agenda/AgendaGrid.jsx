@@ -234,7 +234,7 @@ const CurrentTimeHorizontalLine = React.memo(function CurrentTimeHorizontalLine(
 
     return (
         <div
-            className="absolute left-16 right-0 z-0 pointer-events-none border-t border-rose-500/30 shadow-[0_1px_0_rgba(255,255,255,0.4)]"
+            className="absolute left-0 right-0 z-0 pointer-events-none border-t border-rose-500/30 shadow-[0_1px_0_rgba(255,255,255,0.4)]"
             style={{ top }}
         />
     );
@@ -256,6 +256,12 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
 
     // Derived Constants
     const pixelsPerMinute = useMemo(() => VISUAL_SLOT_HEIGHT / slotInterval, [slotInterval]);
+
+    // CSS Grid template for barber columns
+    const gridColumns = useMemo(() =>
+        `repeat(${barbers.length}, minmax(170px, 1fr))`,
+        [barbers.length]
+    );
 
     const timeSlots = useMemo(() => {
         const slots = [];
@@ -449,7 +455,6 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
 
 
     if (loading || settingsLoading) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
-    if (loading || settingsLoading) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
 
     if (error) {
         return (
@@ -482,24 +487,17 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                 "flex flex-col h-full bg-white shadow-sm rounded-lg border border-slate-200/80 overflow-hidden transition-opacity duration-300",
                 isSaving && "opacity-90 cursor-wait pointer-events-none"
             )}>
-                <div className="flex-1 overflow-auto relative scrollbar-thin">
-                    <div className="w-full min-w-max">
+                {/* Vertical scroll wrapper — both zones scroll vertically together */}
+                <div className="flex-1 overflow-y-auto relative scrollbar-thin">
+                    <div className="flex">
 
-                        {/* Header Row */}
-                        <div className="flex border-b border-slate-200 bg-slate-50 sticky top-0 z-30 shadow-sm">
-                            <div className="w-16 shrink-0 border-r border-slate-200 bg-slate-50 sticky left-0 z-40"></div>
-                            {barbers.map(barber => (
-                                <div key={barber.id} className="flex-1 min-w-[140px] text-center py-3 font-semibold text-slate-700 uppercase tracking-wide text-xs border-r border-slate-200 last:border-r-0">
-                                    {barber.full_name}
-                                </div>
-                            ))}
-                        </div>
+                        {/* ══════ TIME COLUMN (fixed, never scrolls horizontally) ══════ */}
+                        <div className="w-16 shrink-0 bg-white z-20">
+                            {/* Sticky header cell */}
+                            <div className="h-[44px] sticky top-0 z-40 bg-slate-50 border-b border-slate-200 border-r border-r-slate-200 shadow-sm" />
 
-                        {/* Body Row */}
-                        <div className="flex relative">
-
-                            {/* Time Column */}
-                            <div className="w-16 shrink-0 border-r border-slate-100 bg-white sticky left-0 z-20 text-xs text-slate-400 font-medium text-right pr-2">
+                            {/* Time slots */}
+                            <div className="relative border-r border-slate-100 text-xs text-slate-400 font-medium text-right pr-2">
                                 {timeSlots.map((slot, i) => (
                                     <div key={i} className="flex items-start justify-end pr-2 pt-1 border-b border-transparent" style={{ height: VISUAL_SLOT_HEIGHT }}>
                                         <span className="-mt-2 bg-white relative z-10 px-1">{format(slot, 'HH:mm')}</span>
@@ -514,79 +512,100 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                                     />
                                 )}
                             </div>
-
-                            {/* Barber Columns */}
-                            {barbers.map((barber) => (
-                                <DroppableBarberColumn
-                                    key={barber.id}
-                                    barberId={barber.id}
-                                    className="flex-1 min-w-[140px] border-r border-slate-100 relative last:border-r-0"
-                                >
-                                    {/* Background Slots */}
-                                    {timeSlots.map((slot, i) => {
-                                        const isFullHour = slot.getMinutes() === 0;
-                                        return (
-                                            <div
-                                                key={i}
-                                                className={cn(
-                                                    "w-full hover:bg-indigo-50/30 transition-colors group cursor-pointer border-b",
-                                                    isFullHour ? "border-slate-200/60" : "border-slate-50"
-                                                )}
-                                                style={{ height: VISUAL_SLOT_HEIGHT }}
-                                                onClick={(e) => handleSlotClick(barber, slot, e)}
-                                            >
-                                                <div className="hidden group-hover:flex items-center justify-center h-full w-full opacity-0 group-hover:opacity-100 text-indigo-200/70 font-semibold text-xl">
-                                                    +
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-
-                                    {/* Bookings */}
-                                    {renderableBookings
-                                        .filter(b => b.barber_id === barber.id)
-                                        .map(booking => (
-                                            <DraggableBooking
-                                                key={booking.id}
-                                                booking={booking}
-                                                top={booking._visual.top}
-                                                height={booking._visual.height}
-                                                statusClassName={booking._visual.config.grid?.className}
-                                                onClick={(e) => handleBookingClick(barber, booking._visual.start, booking, e)}
-                                            >
-                                                <BookingItemContent
-                                                    booking={booking}
-                                                    start={booking._visual.start}
-                                                    height={booking._visual.height}
-                                                    config={booking._visual.config}
-                                                />
-                                            </DraggableBooking>
-                                        ))
-                                    }
-
-                                    {/* Unavailability Blocks */}
-                                    {renderableUnavailability
-                                        .filter(u => u.barber_id === barber.id)
-                                        .map(block => (
-                                            <UnavailabilityItem
-                                                key={block.id}
-                                                block={block}
-                                                top={block._visual.top}
-                                                height={block._visual.height}
-                                            />
-                                        ))
-                                    }
-                                </DroppableBarberColumn>
-                            ))}
-                            {isToday && (
-                                <CurrentTimeHorizontalLine
-                                    currentTime={currentTime}
-                                    startHourStr={startHourStr}
-                                    endHourStr={endHourStr}
-                                    pixelsPerMinute={pixelsPerMinute}
-                                />
-                            )}
                         </div>
+
+                        {/* ══════ BARBER ZONE (horizontal scroll when columns exceed width) ══════ */}
+                        <div className="flex-1 overflow-x-auto">
+                            {/* Sticky barber header — CSS Grid */}
+                            <div
+                                className="grid sticky top-0 z-30 bg-slate-50 border-b border-slate-200 shadow-sm"
+                                style={{ gridTemplateColumns: gridColumns }}
+                            >
+                                {barbers.map(barber => (
+                                    <div key={barber.id} className="text-center py-3 font-semibold text-slate-700 uppercase tracking-wide text-xs border-r border-slate-200 last:border-r-0">
+                                        {barber.full_name}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Body — CSS Grid */}
+                            <div
+                                className="grid relative"
+                                style={{ gridTemplateColumns: gridColumns }}
+                            >
+                                {barbers.map((barber) => (
+                                    <DroppableBarberColumn
+                                        key={barber.id}
+                                        barberId={barber.id}
+                                        className="border-r border-slate-100 relative last:border-r-0"
+                                    >
+                                        {/* Background Slots */}
+                                        {timeSlots.map((slot, i) => {
+                                            const isFullHour = slot.getMinutes() === 0;
+                                            return (
+                                                <div
+                                                    key={i}
+                                                    className={cn(
+                                                        "w-full hover:bg-indigo-50/30 transition-colors group cursor-pointer border-b",
+                                                        isFullHour ? "border-slate-200/60" : "border-slate-50"
+                                                    )}
+                                                    style={{ height: VISUAL_SLOT_HEIGHT }}
+                                                    onClick={(e) => handleSlotClick(barber, slot, e)}
+                                                >
+                                                    <div className="hidden group-hover:flex items-center justify-center h-full w-full opacity-0 group-hover:opacity-100 text-indigo-200/70 font-semibold text-xl">
+                                                        +
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {/* Bookings */}
+                                        {renderableBookings
+                                            .filter(b => b.barber_id === barber.id)
+                                            .map(booking => (
+                                                <DraggableBooking
+                                                    key={booking.id}
+                                                    booking={booking}
+                                                    top={booking._visual.top}
+                                                    height={booking._visual.height}
+                                                    statusClassName={booking._visual.config.grid?.className}
+                                                    onClick={(e) => handleBookingClick(barber, booking._visual.start, booking, e)}
+                                                >
+                                                    <BookingItemContent
+                                                        booking={booking}
+                                                        start={booking._visual.start}
+                                                        height={booking._visual.height}
+                                                        config={booking._visual.config}
+                                                    />
+                                                </DraggableBooking>
+                                            ))
+                                        }
+
+                                        {/* Unavailability Blocks */}
+                                        {renderableUnavailability
+                                            .filter(u => u.barber_id === barber.id)
+                                            .map(block => (
+                                                <UnavailabilityItem
+                                                    key={block.id}
+                                                    block={block}
+                                                    top={block._visual.top}
+                                                    height={block._visual.height}
+                                                />
+                                            ))
+                                        }
+                                    </DroppableBarberColumn>
+                                ))}
+                                {isToday && (
+                                    <CurrentTimeHorizontalLine
+                                        currentTime={currentTime}
+                                        startHourStr={startHourStr}
+                                        endHourStr={endHourStr}
+                                        pixelsPerMinute={pixelsPerMinute}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
