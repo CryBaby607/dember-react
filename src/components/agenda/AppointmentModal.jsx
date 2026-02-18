@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { X, Clock, User, Scissors, Check, AlertCircle, Play, CheckCircle, Ban, Calendar, Edit2, Save, Trash2 } from 'lucide-react';
 import { format, addMinutes, parseISO, areIntervalsOverlapping } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
@@ -15,6 +15,7 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
     const [error, setError] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
     const [pendingAction, setPendingAction] = useState(null); // 'complete' | 'cancel' | null
+    const actionLock = useRef(false); // Synchronous guard against double-click
 
     // Edit Mode State
     const [isEditing, setIsEditing] = useState(false);
@@ -98,7 +99,8 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
 
     // Handlers
     const handleUpdate = useCallback(async () => {
-        if (!booking || isSaving) return;
+        if (!booking || actionLock.current) return;
+        actionLock.current = true;
         setError(null);
         setIsSaving(true);
 
@@ -132,13 +134,15 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
             setError(err.message || 'Error al actualizar');
         } finally {
             setIsSaving(false);
+            actionLock.current = false;
         }
     }, [booking, selectedBarberId, selectedDate, selectedTime, startTime, endTime, onStatusChange, onClose]);
 
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
-        if (isSaving) return;
+        if (actionLock.current) return;
+        actionLock.current = true;
 
         if (isEditing) {
             await handleUpdate();
@@ -202,13 +206,14 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
             console.error(err);
         } finally {
             setIsSaving(false);
+            actionLock.current = false;
         }
     }, [isSaving, isEditing, handleUpdate, isViewMode, clientName, selectedServiceId, startTime, endTime, existingBookings, currentBarber, service, duration, onSave, onClose]);
 
 
     // State Transition Handlers
     const handleStatusAction = useCallback(async (action) => {
-        if (!booking || isSaving) return;
+        if (!booking || actionLock.current) return;
 
         // Require confirmation for destructive actions
         if ((action === 'complete' || action === 'cancel') && pendingAction !== action) {
@@ -216,6 +221,7 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
             return;
         }
 
+        actionLock.current = true;
         setPendingAction(null);
         setIsSaving(true);
         try {
@@ -234,12 +240,13 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
             setError(err.message || 'Error al actualizar el estado');
         } finally {
             setIsSaving(false);
+            actionLock.current = false;
         }
     }, [booking, isSaving, pendingAction, onStatusChange, onClose]);
 
     // Delete Handler
     const handleDelete = useCallback(async () => {
-        if (!booking || isSaving) return;
+        if (!booking || actionLock.current) return;
 
         // Require confirmation first
         if (pendingAction !== 'delete') {
@@ -247,6 +254,7 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
             return;
         }
 
+        actionLock.current = true;
         setPendingAction(null);
         setIsSaving(true);
         try {
@@ -264,6 +272,7 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
             setError(err.message || 'Error al eliminar la cita');
         } finally {
             setIsSaving(false);
+            actionLock.current = false;
         }
     }, [booking, isSaving, pendingAction, onStatusChange, onClose]);
 

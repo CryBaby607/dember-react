@@ -1,30 +1,29 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useSWRConfig } from 'swr';
+import useSWR from 'swr';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { fetchAllBarbers } from '@/lib/fetchers';
 
 export function useBarbers() {
-    const [barbers, setBarbers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const { mutate } = useSWRConfig();
 
-    const fetchBarbers = useCallback(async () => {
-        try {
-            setLoading(true);
-            const { data, error } = await supabase
-                .from('barbers')
-                .select('*')
-                .order('created_at', { ascending: true });
+    const {
+        data: barbers,
+        error,
+        isLoading: loading
+    } = useSWR('all_barbers', fetchAllBarbers, {
+        revalidateOnFocus: false
+    });
 
-            if (error) throw error;
-            setBarbers(data || []);
-        } catch (err) {
-            console.error('Error fetching barbers:', err);
-            setError(err.message);
-            toast.error('Error al cargar barberos');
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const refreshBarbers = () => {
+        mutate('all_barbers');
+    };
+
+    // Helper to refresh both lists (all for management, active for agenda)
+    const refreshAll = () => {
+        mutate('all_barbers');
+        mutate('active_barbers');
+    };
 
     const addBarber = async (name, isActive = true) => {
         try {
@@ -36,8 +35,8 @@ export function useBarbers() {
 
             if (error) throw error;
 
-            setBarbers(prev => [...prev, data]);
             toast.success('Barbero agregado correctamente');
+            refreshAll();
             return data;
         } catch (err) {
             console.error('Error adding barber:', err);
@@ -55,10 +54,8 @@ export function useBarbers() {
 
             if (error) throw error;
 
-            setBarbers(prev => prev.map(barber =>
-                barber.id === id ? { ...barber, is_active: !currentStatus } : barber
-            ));
             toast.success(`Barbero ${!currentStatus ? 'activado' : 'desactivado'}`);
+            refreshAll();
         } catch (err) {
             console.error('Error updating barber status:', err);
             toast.error('Error al actualizar estado');
@@ -89,8 +86,8 @@ export function useBarbers() {
 
             if (error) throw error;
 
-            setBarbers(prev => prev.filter(b => b.id !== id));
             toast.success('Barbero eliminado correctamente');
+            refreshAll();
             return { success: true };
         } catch (err) {
             console.error('Error deleting barber:', err);
@@ -99,17 +96,13 @@ export function useBarbers() {
         }
     };
 
-    useEffect(() => {
-        fetchBarbers();
-    }, [fetchBarbers]);
-
     return {
-        barbers,
+        barbers: barbers || [],
         loading,
-        error,
+        error: error ? error.message : null,
         addBarber,
         toggleBarberStatus,
         deleteBarber,
-        refreshBarbers: fetchBarbers
+        refreshBarbers
     };
 }

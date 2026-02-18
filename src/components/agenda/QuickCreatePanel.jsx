@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+// useRef saveLock is used as synchronous guard against double-click race conditions
 import { X, Clock, User, Check, Loader2 } from 'lucide-react';
 import { format, addMinutes } from 'date-fns';
 import { toZoned, normalizeToMinute } from '@/lib/dateUtils';
@@ -67,6 +68,7 @@ export function QuickCreatePanel({ isOpen, onClose, barber, time, anchorRect, on
     const [selectedServiceId, setSelectedServiceId] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState(null);
+    const saveLock = useRef(false);
     const [panelPos, setPanelPos] = useState(null);
 
     const panelRef = useRef(null);
@@ -121,7 +123,8 @@ export function QuickCreatePanel({ isOpen, onClose, barber, time, anchorRect, on
     }, [isOpen, onClose]);
 
     const handleConfirm = useCallback(async () => {
-        if (isSaving || !clientName.trim() || !selectedService) return;
+        if (saveLock.current || !clientName.trim() || !selectedService) return;
+        saveLock.current = true;
 
         setError(null);
         setIsSaving(true);
@@ -144,10 +147,11 @@ export function QuickCreatePanel({ isOpen, onClose, barber, time, anchorRect, on
             await onSave(appointmentData);
             onClose(); // Auto-close on success
         } catch (err) {
-            console.error('QuickCreate Error:', err);
-            setError(err.message || 'Error al crear la cita');
+            // Error already notified by Agenda.jsx via toast
+            // Panel stays open so the user can retry
         } finally {
             setIsSaving(false);
+            saveLock.current = false;
         }
     }, [isSaving, clientName, selectedService, selectedServiceId, time, barber, onSave, onClose]);
 

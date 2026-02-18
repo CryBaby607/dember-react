@@ -4,8 +4,8 @@ import { AppointmentModal } from '@/components/agenda/AppointmentModal';
 import { QuickCreatePanel } from '@/components/agenda/QuickCreatePanel';
 import { format, addDays, subDays, parse } from 'date-fns';
 
-import { now, formatZoned, toZoned, fromZoned, es } from '@/lib/dateUtils';
-import { ChevronLeft, ChevronRight, CalendarCheck, Ban } from 'lucide-react';
+import { now, formatZoned, toZoned, es } from '@/lib/dateUtils';
+import { ChevronLeft, ChevronRight, Ban } from 'lucide-react';
 import { UnavailabilityModal } from '@/components/agenda/UnavailabilityModal';
 import { supabase } from '@/lib/supabase';
 import { useAgenda } from '@/hooks/useAgenda';
@@ -154,9 +154,6 @@ export function Agenda() {
             <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <div className="bg-indigo-100 p-2 rounded-lg text-indigo-700">
-                            <CalendarCheck size={24} aria-hidden="true" />
-                        </div>
                         <div>
                             <h2 className="text-xl font-bold text-slate-800 leading-tight">Agenda Diaria</h2>
                             <p className="text-xs text-slate-500 font-medium">Gestión Operativa</p>

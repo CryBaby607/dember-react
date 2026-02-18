@@ -1,5 +1,5 @@
 import { toZonedTime, fromZonedTime, format as formatTz } from 'date-fns-tz';
-import { format as formatFns, startOfDay, endOfDay, addMinutes, parseISO } from 'date-fns';
+
 import { es } from 'date-fns/locale';
 
 export const TIMEZONE = 'America/Mexico_City';
@@ -55,22 +55,9 @@ export function formatZoned(date, formatString) {
  */
 
 export function startOfDayZoned(date) {
-    // 1. Convert input date to zoneless representation of the day in Mexico
     const zonedDate = toZoned(date);
-    // 2. Get start of that day
-    const start = startOfDay(zonedDate);
-    // 3. IMPORTANT: The result of startOfDay on a zoned date logic might be tricky.
-    // If we use date-fns startOfDay, it operates on local system time interpretation.
-
-    // Better approach: string manipulation or using fromZonedTime?
-    // Let's rely on date-fns-tz:
-    // "2023-10-27 00:00:00" in Mexico
-
-    // We can construct the datestring YYYY-MM-DD
     const isoDate = formatTz(zonedDate, 'yyyy-MM-dd', { timeZone: TIMEZONE });
-    // Then create a date at 00:00 Mexico time
-    const startZoned = fromZonedTime(`${isoDate} 00:00:00`, TIMEZONE);
-    return startZoned; // This is a UTC date representing 00:00 Mexico
+    return fromZonedTime(`${isoDate} 00:00:00`, TIMEZONE);
 }
 
 export function endOfDayZoned(date) {
@@ -81,20 +68,7 @@ export function endOfDayZoned(date) {
     return endZoned;
 }
 
-/**
- * Parses a time string (HH:mm) on a specific date in the target timezone
- * and returns the corresponding UTC date.
- * @param {Date} referenceDate - The date context (e.g. current selected day)
- * @param {string} timeString - "14:30"
- */
-export function parseTimeInZone(referenceDate, timeString) {
-    if (!timeString) return null;
-    const zonedBase = toZoned(referenceDate);
-    const dateStr = formatTz(zonedBase, 'yyyy-MM-dd', { timeZone: TIMEZONE });
-    // Combine YYYY-MM-DD + HH:mm:00
-    // fromZonedTime treats the input string as belonging to the timezone
-    return fromZonedTime(`${dateStr} ${timeString}:00`, TIMEZONE);
-}
+
 
 /**
  * Strips seconds and milliseconds from a Date object.

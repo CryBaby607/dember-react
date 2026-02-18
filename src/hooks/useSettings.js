@@ -45,7 +45,7 @@ export function useSettings() {
             if (error) throw error;
 
             setSettings(data);
-            toast.success('Configuración actualizada correctly');
+            toast.success('Configuración actualizada correctamente');
             return true;
         } catch (err) {
             console.error('Error updating settings:', err);

@@ -18,7 +18,7 @@ export function Layout({ children }) {
     };
 
     return (
-        <div className="flex h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 overflow-hidden">
+        <div className="flex h-[100dvh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 overflow-hidden">
             {/* Sidebar Component */}
             <Sidebar
                 isCollapsed={isCollapsed}

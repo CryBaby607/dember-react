@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Archive, CheckCircle, Clock, DollarSign, Search } from 'lucide-react';
+import { Plus, Edit2, Archive, CheckCircle, Clock, DollarSign, Search, PackageX } from 'lucide-react';
 import { useServices } from '@/hooks/useServices';
 import { ServiceModal } from './ServiceModal';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export function ServiceList() {
     const { services, loading, error, toggleServiceStatus, createService, updateService } = useServices();
@@ -45,10 +47,12 @@ export function ServiceList() {
 
     if (error) {
         return (
-            <div className="p-8 text-center text-red-500 bg-red-50 rounded-xl border border-red-200">
-                <p className="font-bold">Error al cargar servicios</p>
-                <p className="text-sm">{error}</p>
-            </div>
+            <ErrorState
+                title="Error al cargar servicios"
+                message={error}
+                onRetry={() => window.location.reload()}
+                className="bg-white rounded-xl border border-red-100"
+            />
         );
     }
 
@@ -101,13 +105,20 @@ export function ServiceList() {
             {/* List */}
             <div className="divide-y divide-gray-100">
                 {filteredServices.length === 0 ? (
-                    <div className="p-12 text-center">
-                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Archive className="text-gray-300" size={24} aria-hidden="true" />
-                        </div>
-                        <h3 className="text-slate-900 font-medium mb-1">No hay servicios encontrados</h3>
-                        <p className="text-slate-500 text-sm">Prueba ajustando los filtros o agrega uno nuevo.</p>
-                    </div>
+                    <EmptyState
+                        title="No hay servicios encontrados"
+                        description={searchTerm ? `No hay resultados para "${searchTerm}"` : "Comienza agregando los servicios que ofrece tu barbería."}
+                        icon={searchTerm ? Search : PackageX}
+                        className="py-12"
+                        action={!searchTerm && (
+                            <button
+                                onClick={handleOpenCreate}
+                                className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+                            >
+                                Crear nuevo servicio
+                            </button>
+                        )}
+                    />
                 ) : (
                     filteredServices.map((service) => (
                         <div key={service.id} className="p-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors group">

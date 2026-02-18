@@ -9,6 +9,10 @@ import { BOOKING_STATUS, STATUS_CONFIG } from '@/constants/bookingStatus';
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { UserX } from 'lucide-react';
 
 // --- Visual Constants ---
 const VISUAL_SLOT_HEIGHT = 60;
@@ -417,6 +421,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                     toast.error(`Error al mover cita: ${error.message}`);
                 }
             } else {
+                isUpdating.current = false; // Unlock BEFORE refresh to accept incoming data
                 if (onStatusChange) onStatusChange();
             }
 
@@ -425,7 +430,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
             setLocalBookings(originalBookings); // Revert
             toast.error("Error de conexión al mover cita.");
         } finally {
-            isUpdating.current = false; // Unblock
+            if (isUpdating.current) isUpdating.current = false; // Only reset if still locked (success path already unlocked)
             isDraggingLocked.current = false; // Unlock DnD
             setIsSaving(false);
         }
@@ -444,14 +449,30 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
 
 
     if (loading || settingsLoading) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
-    if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+    if (loading || settingsLoading) return <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+
+    if (error) {
+        return (
+            <ErrorState
+                title="Error al cargar la agenda"
+                message={error}
+                onRetry={() => window.location.reload()} // Simple reload for now, or trigger fetch
+            />
+        );
+    }
 
     if (!barbers || barbers.length === 0) {
         return (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                <p className="font-medium text-lg">No hay barberos activos</p>
-                <p className="text-sm">Ve a Configuración para agregar barberos.</p>
-            </div>
+            <EmptyState
+                title="No hay barberos activos"
+                description="Ve a Configuración para agregar barberos y comenzar a gestionar la agenda."
+                icon={UserX}
+                action={
+                    <a href="/config" className="text-indigo-600 hover:text-indigo-700 font-medium text-sm">
+                        Ir a Configuración &rarr;
+                    </a>
+                }
+            />
         );
     }
 
