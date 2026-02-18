@@ -141,15 +141,20 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
-        if (actionLock.current) return;
-        actionLock.current = true;
 
+        // Edit mode — delegate entirely to handleUpdate (it manages its own lock)
         if (isEditing) {
             await handleUpdate();
             return;
         }
 
-        if (isViewMode) return;
+        if (actionLock.current) return;
+        actionLock.current = true;
+
+        if (isViewMode) {
+            actionLock.current = false;
+            return;
+        }
 
         setError(null);
 
