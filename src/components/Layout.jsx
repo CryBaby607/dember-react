@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { useIsPortrait } from '@/hooks/useIsPortrait';
+import { cn } from '@/lib/utils';
 
 export function Layout({ children }) {
     const isPortrait = useIsPortrait(); // true when width < 1024px
@@ -58,7 +59,11 @@ export function Layout({ children }) {
 
             {/* Main Content */}
             <main
-                className="flex-1 overflow-hidden flex flex-col relative transition-all duration-300 ease-in-out bg-slate-50 m-2 rounded-2xl shadow-2xl border border-white/10"
+                className={cn(
+                    "flex-1 min-w-0 overflow-hidden flex flex-col relative transition-all duration-300 ease-in-out bg-slate-50 m-2 rounded-2xl shadow-2xl border border-white/10",
+                    // In portrait, offset for the fixed sidebar (w-[88px] collapsed)
+                    isPortrait && "ml-[88px]"
+                )}
             >
                 {children}
             </main>
