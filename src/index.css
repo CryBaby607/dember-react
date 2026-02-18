@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* === PWA Tablet UX === */
+
+/* Prevent accidental zoom on double-tap (safe for dnd-kit) */
+html {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent pull-to-refresh and overscroll bouncing */
+body {
+  overscroll-behavior: none;
+}

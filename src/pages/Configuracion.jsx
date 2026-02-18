@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarberManagement } from '@/components/configuration/BarberManagement';
 import { BusinessHours } from '@/components/configuration/BusinessHours';
-import { Settings, Shield, Bell } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 export function Configuracion() {
     return (
@@ -27,35 +27,6 @@ export function Configuracion() {
                     <BusinessHours />
                     <BarberManagement />
                 </section>
-
-                <div className="border-t border-slate-200 pt-8">
-                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Próximos Módulos</h2>
-
-                    {/* Placeholders for future modules */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white/50 border border-slate-200 border-dashed p-6 rounded-xl flex items-start gap-4 hover:bg-slate-50 transition-colors group cursor-not-allowed">
-                            <div className="bg-blue-50 p-3 rounded-lg text-blue-400 group-hover:text-blue-500 transition-colors">
-                                <Shield size={24} aria-hidden="true" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-slate-700 group-hover:text-slate-800">Roles y Permisos</h3>
-                                <p className="text-sm text-slate-500 mt-1 leading-relaxed">Control granular de acceso para recepcionistas, barberos y administradores.</p>
-                                <span className="inline-block mt-3 text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded">En Desarrollo</span>
-                            </div>
-                        </div>
-
-                        <div className="bg-white/50 border border-slate-200 border-dashed p-6 rounded-xl flex items-start gap-4 hover:bg-slate-50 transition-colors group cursor-not-allowed">
-                            <div className="bg-amber-50 p-3 rounded-lg text-amber-400 group-hover:text-amber-500 transition-colors">
-                                <Bell size={24} aria-hidden="true" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-slate-700 group-hover:text-slate-800">Notificaciones</h3>
-                                <p className="text-sm text-slate-500 mt-1 leading-relaxed">Configuración de recordatorios por WhatsApp y correo electrónico para clientes.</p>
-                                <span className="inline-block mt-3 text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Próximamente</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );
