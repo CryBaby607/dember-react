@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X, Clock, User, Scissors, Check, AlertCircle, Play, CheckCircle, Ban, Calendar, Edit2, Save } from 'lucide-react';
+import { X, Clock, User, Scissors, Check, AlertCircle, Play, CheckCircle, Ban, Calendar, Edit2, Save, Trash2 } from 'lucide-react';
 import { format, addMinutes, parseISO, areIntervalsOverlapping } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { toZoned, TIMEZONE, formatZoned, normalizeToMinute } from '@/lib/dateUtils';
@@ -237,6 +237,36 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
         }
     }, [booking, isSaving, pendingAction, onStatusChange, onClose]);
 
+    // Delete Handler
+    const handleDelete = useCallback(async () => {
+        if (!booking || isSaving) return;
+
+        // Require confirmation first
+        if (pendingAction !== 'delete') {
+            setPendingAction('delete');
+            return;
+        }
+
+        setPendingAction(null);
+        setIsSaving(true);
+        try {
+            const { error } = await supabase.rpc('delete_booking_safe', { p_booking_id: booking.id });
+            if (error) {
+                if (error.code === 'P0003') throw new Error('Cita no encontrada.');
+                if (error.code === 'P0004') throw new Error(error.message);
+                throw error;
+            }
+
+            if (onStatusChange) onStatusChange();
+            onClose();
+        } catch (err) {
+            console.error('Delete Error:', err);
+            setError(err.message || 'Error al eliminar la cita');
+        } finally {
+            setIsSaving(false);
+        }
+    }, [booking, isSaving, pendingAction, onStatusChange, onClose]);
+
     // --- EARLY RETURN AFTER ALL HOOKS ---
     if (!isOpen || !initialData) return null;
 
@@ -465,31 +495,66 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
                                         </button>
                                     </div>
                                 </div>
+                            ) : pendingAction === 'delete' ? (
+                                <div className="space-y-2">
+                                    <div className="text-center py-2 px-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <p className="text-sm font-medium text-red-700">¿Estás seguro de que deseas eliminar esta cita?</p>
+                                        <p className="text-xs text-red-500 mt-0.5">Esta acción no se puede deshacer.</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPendingAction(null)}
+                                            disabled={isSaving}
+                                            className="px-4 py-2.5 bg-white border border-gray-200 text-slate-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleDelete}
+                                            disabled={isSaving}
+                                            className="px-4 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-md shadow-red-200 flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={16} />} Eliminar
+                                        </button>
+                                    </div>
+                                </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-2">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleStatusAction('cancel')}
+                                            disabled={isSaving}
+                                            className="px-3 py-2.5 bg-white border border-gray-200 text-red-600 font-medium rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            <Ban size={16} /> Cancelar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEditing(true)}
+                                            disabled={isSaving}
+                                            className="px-3 py-2.5 bg-white border border-gray-200 text-indigo-600 font-medium rounded-lg hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <Edit2 size={16} /> Editar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleStatusAction('start')}
+                                            disabled={isSaving}
+                                            className="col-span-2 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Play size={18} />} Iniciar Cita
+                                        </button>
+                                    </div>
                                     <button
                                         type="button"
-                                        onClick={() => handleStatusAction('cancel')}
+                                        onClick={handleDelete}
                                         disabled={isSaving}
-                                        className="px-3 py-2.5 bg-white border border-gray-200 text-red-600 font-medium rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="w-full px-3 py-2 bg-white border border-red-200 text-red-500 font-medium rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
-                                        <Ban size={16} /> Cancelar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsEditing(true)}
-                                        disabled={isSaving}
-                                        className="px-3 py-2.5 bg-white border border-gray-200 text-indigo-600 font-medium rounded-lg hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 text-sm"
-                                    >
-                                        <Edit2 size={16} /> Editar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleStatusAction('start')}
-                                        disabled={isSaving}
-                                        className="col-span-2 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                                    >
-                                        {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Play size={18} />} Iniciar Cita
+                                        <Trash2 size={14} /> Eliminar
                                     </button>
                                 </div>
                             )
@@ -534,13 +599,50 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
                         )}
 
                         {(status === BOOKING_STATUS.COMPLETED || status === BOOKING_STATUS.CANCELLED) && (
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="w-full px-4 py-2.5 bg-gray-100 text-slate-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                            >
-                                Cerrar
-                            </button>
+                            pendingAction === 'delete' ? (
+                                <div className="space-y-2">
+                                    <div className="text-center py-2 px-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <p className="text-sm font-medium text-red-700">¿Estás seguro de que deseas eliminar esta cita?</p>
+                                        <p className="text-xs text-red-500 mt-0.5">Esta acción no se puede deshacer.</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPendingAction(null)}
+                                            disabled={isSaving}
+                                            className="px-4 py-2.5 bg-white border border-gray-200 text-slate-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleDelete}
+                                            disabled={isSaving}
+                                            className="px-4 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-md shadow-red-200 flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Trash2 size={16} />} Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        disabled={isSaving}
+                                        className="px-3 py-2.5 bg-white border border-red-200 text-red-500 font-medium rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="flex-1 px-4 py-2.5 bg-gray-100 text-slate-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            )
                         )}
                     </div>
                 </form>

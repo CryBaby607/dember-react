@@ -6,7 +6,7 @@ import { toZoned, now, normalizeToMinute } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 import { Loader2, PlayCircle, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
 import { BOOKING_STATUS, STATUS_CONFIG } from '@/constants/bookingStatus';
-import { DndContext, useSensor, useSensors, PointerSensor, useDraggable, useDroppable } from '@dnd-kit/core';
+import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor, useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/lib/supabase';
 
@@ -27,6 +27,7 @@ const DraggableBooking = React.memo(function DraggableBooking({ booking, top, he
         top: top,
         height: height - 2,
         transform: CSS.Translate.toString(transform),
+        touchAction: 'none', // Required for touch DnD — prevents browser scroll interference
         zIndex: isDragging ? 50 : 10,
         opacity: isDragging ? 0.95 : 1,
         scale: isDragging ? 1.03 : 1,
@@ -271,12 +272,19 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
         return slots;
     }, [date, settings, startHourStr, endHourStr, slotInterval]);
 
-    // Sensor — PointerSensor covers mouse, touch, and pen inputs.
-    // distance: 8 prevents accidental activation on tap and avoids scroll conflicts.
+    // Sensors — Separate MouseSensor + TouchSensor for cross-device support.
+    // MouseSensor: distance:8 prevents click-drag conflicts on desktop.
+    // TouchSensor: delay:200ms allows normal scroll; drag activates on press-and-hold.
     const sensors = useSensors(
-        useSensor(PointerSensor, {
+        useSensor(MouseSensor, {
             activationConstraint: {
                 distance: 8,
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 200,
+                tolerance: 5,
             },
         })
     );
