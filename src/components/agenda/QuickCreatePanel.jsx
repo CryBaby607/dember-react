@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { X, Clock, User, Check, Loader2 } from 'lucide-react';
 import { format, addMinutes } from 'date-fns';
 import { toZoned, normalizeToMinute } from '@/lib/dateUtils';
+import { formatTime } from '@/utils/formatTime';
 import { cn } from '@/lib/utils';
 import { useServices } from '@/hooks/useServices';
 
@@ -181,7 +182,7 @@ export function QuickCreatePanel({ isOpen, onClose, barber, time, anchorRect, on
                         </div>
                         <div className="min-w-0">
                             <p className="text-sm font-bold text-slate-800 tabular-nums">
-                                {format(zonedTime, 'HH:mm')}
+                                {formatTime(zonedTime)}
                             </p>
                             <p className="text-[11px] text-slate-500 font-medium truncate">
                                 {barber.full_name}
@@ -248,7 +249,7 @@ export function QuickCreatePanel({ isOpen, onClose, barber, time, anchorRect, on
                         <div className="flex items-center justify-between px-3 py-2 bg-indigo-50/60 border border-indigo-100 rounded-lg text-xs">
                             <span className="text-indigo-600 font-medium">Horario:</span>
                             <span className="text-indigo-800 font-bold tabular-nums">
-                                {format(zonedTime, 'HH:mm')} — {format(addMinutes(zonedTime, selectedService.duration_minutes), 'HH:mm')}
+                                {formatTime(zonedTime)} — {formatTime(addMinutes(zonedTime, selectedService.duration_minutes))}
                             </span>
                         </div>
                     )}

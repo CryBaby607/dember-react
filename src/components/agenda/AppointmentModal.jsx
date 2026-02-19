@@ -3,6 +3,7 @@ import { X, Clock, User, Scissors, Check, AlertCircle, Play, CheckCircle, Ban, C
 import { format, addMinutes, parseISO, areIntervalsOverlapping } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { toZoned, TIMEZONE, formatZoned, normalizeToMinute } from '@/lib/dateUtils';
+import { formatTime } from '@/utils/formatTime';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { BOOKING_STATUS, STATUS_CONFIG } from '@/constants/bookingStatus';
@@ -315,7 +316,7 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
                             ) : (
                                 <>
                                     <Clock size={12} />
-                                    {formatZoned(startTime, "EEEE d 'de' MMMM • HH:mm")}
+                                    {formatZoned(startTime, "EEEE d 'de' MMMM")} • {formatTime(startTime)}
                                 </>
                             )}
                         </p>
@@ -432,7 +433,7 @@ export function AppointmentModal({ isOpen, onClose, onSave, onStatusChange, init
                         )}>
                             <span className={cn("font-medium", status !== 'cancelled' && "text-indigo-700")}>Horario estimado:</span>
                             <span className={cn("font-bold", status !== 'cancelled' && "text-indigo-900")}>
-                                {formatZoned(startTime, 'HH:mm')} - {formatZoned(endTime, 'HH:mm')}
+                                {formatTime(startTime)} - {formatTime(endTime)}
                             </span>
                         </div>
                     )}

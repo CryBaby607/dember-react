@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { useSettings } from '@/hooks/useSettings';
 import { format, addMinutes, differenceInMinutes, parseISO, isSameDay, setHours, setMinutes, areIntervalsOverlapping } from 'date-fns';
 import { toZoned, now, normalizeToMinute } from '@/lib/dateUtils';
+import { formatTime } from '@/utils/formatTime';
 import { cn } from '@/lib/utils';
 import { Loader2, PlayCircle, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
 import { BOOKING_STATUS, STATUS_CONFIG } from '@/constants/bookingStatus';
@@ -143,7 +144,7 @@ const BookingItemContent = React.memo(function BookingItemContent({ booking, sta
                             "text-[10px] font-medium tabular-nums shrink-0",
                             textConfig.tertiary
                         )}>
-                            {format(start, 'HH:mm')} · {booking.duration_minutes}m
+                            {formatTime(start)} · {booking.duration_minutes}m
                         </span>
                     )}
                 </div>
@@ -155,7 +156,7 @@ const BookingItemContent = React.memo(function BookingItemContent({ booking, sta
                     "text-xs font-medium tabular-nums shrink-0",
                     textConfig.tertiary
                 )}>
-                    {format(start, 'HH:mm')}
+                    {formatTime(start)}
                 </span>
             )}
         </div>
@@ -215,7 +216,7 @@ const CurrentTimeMarker = React.memo(function CurrentTimeMarker({ currentTime, s
         >
             <div
                 className="w-1.5 h-2.5 bg-rose-500/90 rounded-l-sm rounded-r-md shadow-sm"
-                title={format(currentTime, 'HH:mm')}
+                title={formatTime(currentTime)}
             />
         </div>
     );
@@ -500,7 +501,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                             <div className="relative border-r border-slate-100 text-sm text-slate-600 font-medium text-right pr-2">
                                 {timeSlots.map((slot, i) => (
                                     <div key={i} className="flex items-start justify-end pr-2 pt-1 border-b border-transparent" style={{ height: VISUAL_SLOT_HEIGHT }}>
-                                        <span className="-mt-2 bg-white relative z-10 px-1">{format(slot, 'HH:mm')}</span>
+                                        <span className="-mt-2 bg-white relative z-10 px-1">{formatTime(slot)}</span>
                                     </div>
                                 ))}
                                 {isToday && (
