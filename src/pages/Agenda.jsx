@@ -5,8 +5,7 @@ import { QuickCreatePanel } from '@/components/agenda/QuickCreatePanel';
 import { format, addDays, subDays, parse } from 'date-fns';
 
 import { now, formatZoned, toZoned, es } from '@/lib/dateUtils';
-import { ChevronLeft, ChevronRight, Ban } from 'lucide-react';
-import { UnavailabilityModal } from '@/components/agenda/UnavailabilityModal';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAgenda } from '@/hooks/useAgenda';
 import { Toaster, toast } from 'sonner';
@@ -22,7 +21,6 @@ export function Agenda() {
 
     // State for Modal
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isUnavailabilityModalOpen, setIsUnavailabilityModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState(null);
 
     // State for Quick Create Panel
@@ -112,31 +110,6 @@ export function Agenda() {
         }
     };
 
-    const handleSaveUnavailability = async (data) => {
-        try {
-            const { error } = await supabase.rpc('create_unavailability_safe', {
-                p_barber_id: data.barber_id,
-                p_start_time: data.start_time,
-                p_end_time: data.end_time,
-                p_reason: data.reason
-            });
-
-            if (error) throw error;
-
-            toast.success('Horario bloqueado correctamente');
-            handleRefresh();
-        } catch (error) {
-            console.error('Error saving unavailability:', error);
-            if (error.code === 'P0002') {
-                toast.error(error.message); // Booking conflict
-            } else if (error.code === '23P01') {
-                toast.error('Ya existe un bloqueo en este horario.');
-            } else {
-                toast.error('Error al bloquear horario');
-            }
-            throw error;
-        }
-    };
 
     const handleRefresh = async () => {
         // Small delay to ensure DB write propagation before re-fetching
@@ -186,17 +159,6 @@ export function Agenda() {
                     </div>
                 </div>
 
-                {/* Actions */}
-                <div>
-                    <button
-                        onClick={() => setIsUnavailabilityModalOpen(true)}
-                        className="flex items-center gap-2 px-3 lg:px-4 py-2 min-h-[44px] bg-white border border-gray-300 shadow-sm text-slate-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:text-red-600 transition-colors"
-                    >
-                        <Ban size={16} aria-hidden="true" />
-                        <span className="hidden lg:inline">Bloquear Horario</span>
-                        <span className="lg:hidden">Bloquear</span>
-                    </button>
-                </div>
 
 
             </header>
@@ -236,14 +198,7 @@ export function Agenda() {
                 barbers={barbers}
             />
 
-            {/* Unavailability Modal */}
-            <UnavailabilityModal
-                isOpen={isUnavailabilityModalOpen}
-                onClose={() => setIsUnavailabilityModalOpen(false)}
-                onSave={handleSaveUnavailability}
-                date={currentDate}
-                barbers={barbers}
-            />
+
         </div>
     );
 }

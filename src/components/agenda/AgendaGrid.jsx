@@ -19,8 +19,13 @@ import { UserX } from 'lucide-react';
 const VISUAL_SLOT_HEIGHT = 60;
 
 // --- Draggable Booking Component (Memoized) ---
-const DraggableBooking = React.memo(function DraggableBooking({ booking, top, height, onClick, statusClassName, children }) {
+const DraggableBooking = React.memo(function DraggableBooking({ booking, top, height, onClick, statusClassName, currentTime, children }) {
     const isDraggable = booking.status === BOOKING_STATUS.SCHEDULED;
+
+    // Derived state for "Past" styling
+    // Compare Zoned Start Time vs Zoned Current Time
+    const startTime = useMemo(() => toZoned(parseISO(booking.start_time)), [booking.start_time]);
+    const isPast = currentTime && startTime < currentTime;
 
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: booking.id,
@@ -32,7 +37,7 @@ const DraggableBooking = React.memo(function DraggableBooking({ booking, top, he
         top: top,
         height: height - 2,
         transform: CSS.Translate.toString(transform),
-        touchAction: 'none', // Required for touch DnD — prevents browser scroll interference
+        touchAction: 'none',
         zIndex: isDragging ? 50 : 10,
         opacity: isDragging ? 0.95 : 1,
         scale: isDragging ? 1.03 : 1,
@@ -47,17 +52,23 @@ const DraggableBooking = React.memo(function DraggableBooking({ booking, top, he
             className={cn(
                 // Posicionamiento y overflow
                 "absolute inset-x-1 overflow-hidden",
-                // Estilo base: fondo neutro, borde izq 4px, esquinas derechas redondeadas
-                "bg-white rounded-r-md",
-                // Profundidad: custom warm shadow para separación del canvas + micro-borde de definición
-                "shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5",
-                "transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]", // Smooth landing
-                // Estado Dragging: Elevación máxima (Tactile Flux)
-                isDragging && "shadow-2xl ring-2 ring-indigo-500/20 cursor-grabbing",
-                // Feedback táctil: elevación al tocar
-                !isDragging && "active:scale-[1.02] cursor-pointer",
-                // Estilos dinámicos por estado (border-l color, hover bg, etc.)
-                statusClassName
+                // Estilo base
+                "rounded-r-lg border transition-colors duration-300 ease-in-out",
+
+                // Status Colors (border-left, bg) go BEFORE state overrides so they can be overridden
+                statusClassName,
+
+                // --- STATE STYLES ---
+
+                // 1. Dragging: Lifted, highlighted
+                isDragging && "shadow-2xl ring-2 ring-indigo-500/20 cursor-grabbing brightness-105",
+
+                // 2. Upcoming (Interactiva):
+                !isDragging && !isPast && "bg-white border-gray-200 shadow-sm active:scale-[1.02] hover:shadow-md cursor-pointer",
+
+                // 3. Past: Striped background pattern
+                isPast && !isDragging && "bg-slate-50 hover:bg-slate-100 border-slate-200 shadow-none cursor-pointer bg-[repeating-linear-gradient(45deg,transparent,transparent_8px,rgba(0,0,0,0.03)_8px,rgba(0,0,0,0.03)_16px)] [&_*]:!text-slate-500",
+
             )}
             onClick={(e) => {
                 if (!isDragging) onClick(e);
@@ -163,30 +174,7 @@ const BookingItemContent = React.memo(function BookingItemContent({ booking, sta
     );
 });
 
-// --- Unavailability Item (Memoized) ---
-const UnavailabilityItem = React.memo(function UnavailabilityItem({ block, top, height }) {
-    return (
-        <div
-            className="absolute inset-x-0 bg-gray-100/90 border-l-[3px] border-gray-400 z-20 flex flex-col justify-center p-2 cursor-not-allowed shadow-sm"
-            style={{
-                top,
-                height: height - 2,
-                backgroundImage: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 10px, transparent 10px, transparent 20px)'
-            }}
-            title={block.reason}
-        >
-            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider truncate flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-gray-400"></span>
-                No Disponible
-            </div>
-            {height > 30 && (
-                <div className="text-[10px] text-gray-400 truncate pl-3">
-                    {block.reason}
-                </div>
-            )}
-        </div>
-    );
-});
+
 
 // --- Current Time Hook ---
 const useCurrentTime = (updateInterval = 30000) => {
@@ -198,8 +186,8 @@ const useCurrentTime = (updateInterval = 30000) => {
     return currentTime;
 };
 
-// --- Current Time Marker (Pill in Sticky Column) ---
-const CurrentTimeMarker = React.memo(function CurrentTimeMarker({ currentTime, startHourStr, endHourStr, pixelsPerMinute }) {
+// --- Current Time Indicator (Unified & Animated) ---
+const CurrentTimeIndicator = React.memo(function CurrentTimeIndicator({ currentTime, startHourStr, endHourStr, pixelsPerMinute }) {
     const currentTotalMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
     const startTotalMinutes = parseInt(startHourStr.split(':')[0]) * 60 + parseInt(startHourStr.split(':')[1]);
     const endTotalMinutes = parseInt(endHourStr.split(':')[0]) * 60 + parseInt(endHourStr.split(':')[1]);
@@ -210,39 +198,31 @@ const CurrentTimeMarker = React.memo(function CurrentTimeMarker({ currentTime, s
     const top = minutesFromStart * pixelsPerMinute;
 
     return (
-        <div
-            className="absolute left-0 w-full z-30 pointer-events-none flex justify-end items-center pr-0.5"
-            style={{ top }}
-        >
+        <>
+            {/* Wrapper for smooth GPU transition */}
             <div
-                className="w-1.5 h-2.5 bg-rose-500/90 rounded-l-sm rounded-r-md shadow-sm"
-                title={formatTime(currentTime)}
-            />
-        </div>
-    );
-});
+                className="absolute left-0 w-full z-30 pointer-events-none transition-transform duration-500 ease-out will-change-transform"
+                style={{ transform: `translateY(${top}px)` }}
+            >
+                {/* 1. Time Badge (Sticky Column) */}
+                <div className="absolute left-0 w-16 -ml-16 flex justify-end pr-1 items-center -mt-2.5">
+                    <div className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm shadow-rose-200 uppercase tracking-wider flex items-center gap-1">
+                        Ahora
+                    </div>
+                </div>
 
-// --- Current Time Horizontal Line (Across Grid) ---
-const CurrentTimeHorizontalLine = React.memo(function CurrentTimeHorizontalLine({ currentTime, startHourStr, endHourStr, pixelsPerMinute }) {
-    const currentTotalMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
-    const startTotalMinutes = parseInt(startHourStr.split(':')[0]) * 60 + parseInt(startHourStr.split(':')[1]);
-    const endTotalMinutes = parseInt(endHourStr.split(':')[0]) * 60 + parseInt(endHourStr.split(':')[1]);
+                {/* 2. Indicator Head (On Grid Border) */}
+                <div className="absolute -left-1.5 w-3 h-3 bg-rose-500 rounded-full shadow-sm border-2 border-white -mt-1.5 z-40" />
 
-    if (currentTotalMinutes < startTotalMinutes || currentTotalMinutes >= endTotalMinutes) return null;
-
-    const minutesFromStart = currentTotalMinutes - startTotalMinutes;
-    const top = minutesFromStart * pixelsPerMinute;
-
-    return (
-        <div
-            className="absolute left-0 right-0 z-0 pointer-events-none border-t border-rose-500/30 shadow-[0_1px_0_rgba(255,255,255,0.4)]"
-            style={{ top }}
-        />
+                {/* 3. Line (Across Grid) */}
+                <div className="w-full border-t border-rose-500/50 shadow-[0_1px_3px_rgba(244,63,94,0.2)]" />
+            </div>
+        </>
     );
 });
 
 
-export function AgendaGrid({ date, barbers = [], bookings = [], unavailability = [], loading = false, error = null, onSlotClick, onStatusChange }) {
+export function AgendaGrid({ date, barbers = [], bookings = [], loading = false, error = null, onSlotClick, onStatusChange }) {
 
     const { settings, loading: settingsLoading } = useSettings();
 
@@ -253,7 +233,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
 
     // Time State (Centralized)
     const currentTime = useCurrentTime();
-    const isToday = isSameDay(date, new Date());
+    const isToday = isSameDay(date, now());
 
     // Derived Constants
     const pixelsPerMinute = useMemo(() => VISUAL_SLOT_HEIGHT / slotInterval, [slotInterval]);
@@ -268,17 +248,17 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
         const slots = [];
         if (!settings) return [];
 
-        let currentTime = toZoned(date);
-        currentTime = setHours(currentTime, parseInt(startHourStr.split(':')[0]));
-        currentTime = setMinutes(currentTime, parseInt(startHourStr.split(':')[1]));
+        let loopTime = toZoned(date);
+        loopTime = setHours(loopTime, parseInt(startHourStr.split(':')[0]));
+        loopTime = setMinutes(loopTime, parseInt(startHourStr.split(':')[1]));
 
         let endTime = toZoned(date);
         endTime = setHours(endTime, parseInt(endHourStr.split(':')[0]));
         endTime = setMinutes(endTime, parseInt(endHourStr.split(':')[1]));
 
-        while (currentTime < endTime) {
-            slots.push(new Date(currentTime));
-            currentTime = addMinutes(currentTime, slotInterval).getTime();
+        while (loopTime < endTime) {
+            slots.push(loopTime);
+            loopTime = addMinutes(loopTime, slotInterval);
         }
         return slots;
     }, [date, settings, startHourStr, endHourStr, slotInterval]);
@@ -332,24 +312,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
         }).filter(Boolean);
     }, [localBookings, date, startHourStr, pixelsPerMinute]);
 
-    // Optimize Unavailability Rendering
-    const renderableUnavailability = useMemo(() => {
-        const openingDate = toZoned(date);
-        openingDate.setHours(parseInt(startHourStr.split(':')[0]), parseInt(startHourStr.split(':')[1]), 0, 0);
 
-        return unavailability.map(block => {
-            const start = toZoned(parseISO(block.start_time));
-            const end = toZoned(parseISO(block.end_time));
-            if (!isSameDay(start, date) && !isSameDay(end, date)) return null;
-
-            const minutesFromStart = differenceInMinutes(start, openingDate);
-            const top = minutesFromStart * pixelsPerMinute;
-            const duration = differenceInMinutes(end, start);
-            const height = duration * pixelsPerMinute;
-
-            return { ...block, _visual: { top, height } };
-        }).filter(Boolean);
-    }, [unavailability, date, startHourStr, pixelsPerMinute]);
 
 
     const handleDragEnd = useCallback(async (event) => {
@@ -504,14 +467,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                                         <span className="-mt-2 bg-white relative z-10 px-1">{formatTime(slot)}</span>
                                     </div>
                                 ))}
-                                {isToday && (
-                                    <CurrentTimeMarker
-                                        currentTime={currentTime}
-                                        startHourStr={startHourStr}
-                                        endHourStr={endHourStr}
-                                        pixelsPerMinute={pixelsPerMinute}
-                                    />
-                                )}
+
                             </div>
                         </div>
 
@@ -570,6 +526,7 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                                                     top={booking._visual.top}
                                                     height={booking._visual.height}
                                                     statusClassName={booking._visual.config.grid?.className}
+                                                    currentTime={currentTime}
                                                     onClick={(e) => handleBookingClick(barber, booking._visual.start, booking, e)}
                                                 >
                                                     <BookingItemContent
@@ -582,22 +539,11 @@ export function AgendaGrid({ date, barbers = [], bookings = [], unavailability =
                                             ))
                                         }
 
-                                        {/* Unavailability Blocks */}
-                                        {renderableUnavailability
-                                            .filter(u => u.barber_id === barber.id)
-                                            .map(block => (
-                                                <UnavailabilityItem
-                                                    key={block.id}
-                                                    block={block}
-                                                    top={block._visual.top}
-                                                    height={block._visual.height}
-                                                />
-                                            ))
-                                        }
+
                                     </DroppableBarberColumn>
                                 ))}
                                 {isToday && (
-                                    <CurrentTimeHorizontalLine
+                                    <CurrentTimeIndicator
                                         currentTime={currentTime}
                                         startHourStr={startHourStr}
                                         endHourStr={endHourStr}
